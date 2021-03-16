@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
@@ -65,72 +66,88 @@ namespace MassFarming
                 return;
             }
 
-            int halfGrid = MassFarming.PlantGridSize.Value / 2;
-            Vector3 newPos = placedPosition;
-
-            for (var x = 0; x < MassFarming.PlantGridSize.Value; x++)
+            foreach (var newPos in BuildPlantingGridPositions(placedPosition, placedPiece, Quaternion.identity))
             {
-                for (var z = 0; z < MassFarming.PlantGridSize.Value; z++)
+                if (placedPiece.m_cultivatedGroundOnly && !heightmap.IsCultivated(newPos))
                 {
-                    newPos.x = placedPosition.x - halfGrid + x;
-                    newPos.z = placedPosition.z - halfGrid + z;
-                    newPos.y = ZoneSystem.instance.GetGroundHeight(newPos);
+                    continue;
+                }
 
-                    if (placedPiece.m_cultivatedGroundOnly && !heightmap.IsCultivated(newPos))
+                if (placedPosition == newPos)
+                {
+                    //Trying to place around the origin point, so avoid placing a duplicate at the same location
+                    continue;
+                }
+
+                var tool = __instance.GetRightItem();
+                var hasStamina = MassFarming.IgnoreStamina.Value || __instance.HaveStamina(tool.m_shared.m_attack.m_attackStamina);
+
+                if (!hasStamina)
+                {
+                    Hud.instance.StaminaBarNoStaminaFlash();
+                    return;
+                }
+
+                var hasMats = (bool)m_noPlacementCostField.GetValue(__instance) || __instance.HaveRequirements(placedPiece, Player.RequirementMode.CanBuild);
+                if (!hasMats)
+                {
+                    return;
+                }
+
+                if (!HasGrowSpace(newPos, placedPiece.gameObject))
+                {
+                    continue;
+                }
+
+                GameObject newPlaceObj = UnityEngine.Object.Instantiate(placedPiece.gameObject, newPos, placedRotation);
+                Piece component = newPlaceObj.GetComponent<Piece>();
+                if (component)
+                {
+                    component.SetCreator(__instance.GetPlayerID());
+                }
+                placedPiece.m_placeEffect.Create(newPos, placedRotation, newPlaceObj.transform);
+                Game.instance.GetPlayerProfile().m_playerStats.m_builds++;
+
+                __instance.ConsumeResources(placedPiece.m_resources, 0);
+                if (!MassFarming.IgnoreStamina.Value)
+                {
+                    __instance.UseStamina(tool.m_shared.m_attack.m_attackStamina);
+                }
+                if (tool.m_shared.m_useDurability)
+                {
+                    tool.m_durability -= tool.m_shared.m_useDurabilityDrain;
+                    if (tool.m_durability <= 0f)
                     {
-                        continue;
-                    }
-
-                    if (placedPosition == newPos)
-                    {
-                        //Trying to place around the origin point, so avoid placing a duplicate at the same location
-                        continue;
-                    }
-
-                    var tool = __instance.GetRightItem();
-                    var hasStamina = MassFarming.IgnoreStamina.Value || __instance.HaveStamina(tool.m_shared.m_attack.m_attackStamina);
-
-                    if (!hasStamina)
-                    {
-                        Hud.instance.StaminaBarNoStaminaFlash();
                         return;
-                    }
-
-                    var hasMats = (bool)m_noPlacementCostField.GetValue(__instance) || __instance.HaveRequirements(placedPiece, Player.RequirementMode.CanBuild);
-                    if (!hasMats)
-                    {
-                        return;
-                    }
-
-                    if (!HasGrowSpace(newPos, placedPiece.gameObject))
-                    {
-                        continue;
-                    }
-
-                    GameObject newPlaceObj = UnityEngine.Object.Instantiate(placedPiece.gameObject, newPos, placedRotation);
-                    Piece component = newPlaceObj.GetComponent<Piece>();
-                    if (component)
-                    {
-                        component.SetCreator(__instance.GetPlayerID());
-                    }
-                    placedPiece.m_placeEffect.Create(newPos, placedRotation, newPlaceObj.transform);
-                    Game.instance.GetPlayerProfile().m_playerStats.m_builds++;
-
-                    __instance.ConsumeResources(placedPiece.m_resources, 0);
-                    if (!MassFarming.IgnoreStamina.Value)
-                    {
-                        __instance.UseStamina(tool.m_shared.m_attack.m_attackStamina);
-                    }
-                    if (tool.m_shared.m_useDurability)
-                    {
-                        tool.m_durability -= tool.m_shared.m_useDurabilityDrain;
-                        if(tool.m_durability <= 0f)
-                        {
-                            return;
-                        }
                     }
                 }
             }
+        }
+
+        private static List<Vector3> BuildPlantingGridPositions(Vector3 originPos, Piece placedPiece, Quaternion rotation)
+        {
+            var plantRadius = placedPiece.gameObject.GetComponent<Plant>()?.m_growRadius * 2 ?? 1;
+            int halfGrid = MassFarming.PlantGridSize.Value / 2;
+
+            List<Vector3> gridPositions = new List<Vector3>(MassFarming.PlantGridSize.Value * MassFarming.PlantGridSize.Value);
+            Vector3 left = rotation * Vector3.left * plantRadius;
+            Vector3 forward = rotation * Vector3.forward * plantRadius;
+            Debug.Log($"Radius: {plantRadius}, Left: {left.ToString("F4")}, Forward {forward.ToString("F4")}");
+            Vector3 gridOrigin = originPos - (forward * halfGrid) - (left * halfGrid);
+
+            Vector3 newPos;
+            for (var x = 0; x < MassFarming.PlantGridSize.Value; x++)
+            {
+                newPos = gridOrigin;
+                for (var z = 0; z < MassFarming.PlantGridSize.Value; z++)
+                {
+                    newPos.y = ZoneSystem.instance.GetGroundHeight(newPos);
+                    gridPositions.Add(newPos);
+                    newPos += left;
+                }
+                gridOrigin += forward;
+            }
+            return gridPositions;
         }
 
         static int _plantSpaceMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "piece_nonsolid");
