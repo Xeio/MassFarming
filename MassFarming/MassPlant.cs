@@ -97,6 +97,10 @@ namespace MassFarming
                         return;
                     }
 
+                    if (!HasGrowSpace(newPos, placedPiece.gameObject))
+                    {
+                        continue;
+                    }
 
                     GameObject newPlaceObj = UnityEngine.Object.Instantiate(placedPiece.gameObject, newPos, placedRotation);
                     Piece component = newPlaceObj.GetComponent<Piece>();
@@ -122,6 +126,17 @@ namespace MassFarming
                     }
                 }
             }
+        }
+
+        static int _plantSpaceMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "piece_nonsolid");
+        private static bool HasGrowSpace(Vector3 newPos, GameObject go) 
+        {
+            if (go.GetComponent<Plant>() is Plant placingPlant) 
+            {
+                Collider[] nearbyObjects = Physics.OverlapSphere(newPos, placingPlant.m_growRadius, _plantSpaceMask);
+                return nearbyObjects.Length == 0;
+            }
+            return true;
         }
     }
 }
