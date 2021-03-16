@@ -59,9 +59,14 @@ namespace MassFarming
                 return;
             }
 
+            var heightmap = Heightmap.FindHeightmap(placedPosition);
+            if (!heightmap)
+            {
+                return;
+            }
+
             int halfGrid = MassFarming.PlantGridSize.Value / 2;
             Vector3 newPos = placedPosition;
-            ZoneSystem.instance.GetGroundData(ref placedPosition, out _, out _, out _, out var heightmap);
 
             for (var x = 0; x < MassFarming.PlantGridSize.Value; x++)
             {
