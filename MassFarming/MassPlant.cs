@@ -48,9 +48,8 @@ namespace MassFarming
                 return;
             }
 
-            if (!placedPiece.m_cultivatedGroundOnly)
+            if (!placedPiece.gameObject.GetComponent<Plant>())
             {
-                //Only plants? Is this a reasonable check?
                 return;
             }
 
