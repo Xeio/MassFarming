@@ -68,7 +68,7 @@ namespace MassFarming
                 return;
             }
 
-            foreach (var newPos in BuildPlantingGridPositions(placedPosition, plant, Quaternion.identity))
+            foreach (var newPos in BuildPlantingGridPositions(placedPosition, plant, placedRotation))
             {
                 if (placedPiece.m_cultivatedGroundOnly && !heightmap.IsCultivated(newPos))
                 {
