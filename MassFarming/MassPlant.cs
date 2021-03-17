@@ -162,7 +162,7 @@ namespace MassFarming
             return true;
         }
 
-        private static GameObject[] _myGhost = new GameObject[1];
+        private static GameObject[] _placementGhosts = new GameObject[1];
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Player), "SetupPlacementGhost")]
@@ -202,33 +202,56 @@ namespace MassFarming
                 return;
             }
 
+            var currentStamina = __instance.GetStamina();
+            var tool = __instance.GetRightItem();
+            var heightmap = Heightmap.FindHeightmap(ghost.transform.position);
             var positions = BuildPlantingGridPositions(ghost.transform.position, plant, ghost.transform.rotation);
-            for (int i = 0; i < _myGhost.Length; i++)
+            for (int i = 0; i < _placementGhosts.Length; i++)
             {
-                if (ghost.transform.position == positions[i])
+                var newPos = positions[i];
+                if (ghost.transform.position == newPos)
                 {
                     //Trying to place around the origin point, so avoid placing a duplicate at the same location
-                    _myGhost[i].SetActive(false);
+                    _placementGhosts[i].SetActive(false);
                     continue;
                 }
 
-                _myGhost[i].transform.position = positions[i];
-                _myGhost[i].transform.rotation = ghost.transform.rotation;
-                _myGhost[i].SetActive(true);
+                _placementGhosts[i].transform.position = newPos;
+                _placementGhosts[i].transform.rotation = ghost.transform.rotation;
+                _placementGhosts[i].SetActive(true);
+
+                bool invalid = false;
+                if (ghost.GetComponent<Piece>().m_cultivatedGroundOnly && !heightmap.IsCultivated(newPos))
+                {
+                    invalid = true;
+                }
+                if (!HasGrowSpace(newPos, ghost.gameObject))
+                {
+                    invalid = true;
+                }
+                if (!MassFarming.IgnoreStamina.Value && currentStamina < tool.m_shared.m_attack.m_attackStamina)
+                {
+                    Hud.instance.StaminaBarNoStaminaFlash();
+                    invalid = true;
+                }
+                currentStamina -= tool.m_shared.m_attack.m_attackStamina;
+
+                
+                _placementGhosts[i].GetComponent<Piece>().SetInvalidPlacementHeightlight(invalid);                
             }
         }
 
         private static bool EnsureGhostsBuilt(Player player)
         {
             var requiredSize = MassFarming.PlantGridSize.Value * MassFarming.PlantGridSize.Value;
-            bool needsRebuild = !_myGhost[0] || _myGhost.Length != requiredSize;
+            bool needsRebuild = !_placementGhosts[0] || _placementGhosts.Length != requiredSize;
             if (needsRebuild) 
             {
                 DestroyGhosts();
 
-                if(_myGhost.Length != requiredSize)
+                if(_placementGhosts.Length != requiredSize)
                 {
-                    _myGhost = new GameObject[requiredSize];
+                    _placementGhosts = new GameObject[requiredSize];
                 }
 
                 if (m_buildPiecesField.GetValue(player) is PieceTable pieceTable && pieceTable.GetSelectedPrefab() is GameObject prefab)
@@ -239,9 +262,9 @@ namespace MassFarming
                         return false;
                     }
 
-                    for (int i = 0; i < _myGhost.Length; i++)
+                    for (int i = 0; i < _placementGhosts.Length; i++)
                     {
-                        _myGhost[i] = SetupMyGhost(player, prefab);
+                        _placementGhosts[i] = SetupMyGhost(player, prefab);
                     }
                 }
                 else
@@ -256,19 +279,19 @@ namespace MassFarming
 
         private static void DestroyGhosts()
         {
-            for (int i = 0; i < _myGhost.Length; i++)
+            for (int i = 0; i < _placementGhosts.Length; i++)
             {
-                if (_myGhost[i])
+                if (_placementGhosts[i])
                 {
-                    UnityEngine.Object.Destroy(_myGhost[i]);
-                    _myGhost[i] = null;
+                    UnityEngine.Object.Destroy(_placementGhosts[i]);
+                    _placementGhosts[i] = null;
                 }
             }
         }
 
         private static void SetGhostsActive(bool active)
         {
-            foreach(var ghost in _myGhost) 
+            foreach(var ghost in _placementGhosts) 
             {
                 ghost?.SetActive(active);
             }
