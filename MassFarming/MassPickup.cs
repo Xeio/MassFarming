@@ -8,6 +8,7 @@ namespace MassFarming
     public static class MassPickup
     {
         static FieldInfo m_interactMaskField = AccessTools.Field(typeof(Player), "m_interactMask");
+        static MethodInfo _ExtractMethod = AccessTools.Method(typeof(Beehive), "Extract");
 
         [HarmonyPatch(typeof(Player), "Interact")]
         public static void Prefix(Player __instance, GameObject go, bool hold)
@@ -44,6 +45,23 @@ namespace MassFarming
                         {
                             //Pick up all prefabs with the same name
                             nearbyPickable.Interact(__instance, false);
+                        }
+                    }
+                }
+            }
+            else if(interactible is Beehive beehive)
+            {
+                var interactMask = (int)m_interactMaskField.GetValue(__instance);
+                var colliders = Physics.OverlapSphere(go.transform.position, MassFarming.MassInteractRange.Value, interactMask);
+
+                foreach (var collider in colliders)
+                {
+                    if (collider?.gameObject?.GetComponentInParent<Beehive>() is Beehive nearbyBeehive &&
+                        nearbyBeehive != beehive)
+                    {
+                        if (PrivateArea.CheckAccess(nearbyBeehive.transform.position))
+                        {
+                            _ExtractMethod.Invoke(nearbyBeehive, null);
                         }
                     }
                 }
