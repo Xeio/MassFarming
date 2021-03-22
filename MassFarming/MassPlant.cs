@@ -299,23 +299,12 @@ namespace MassFarming
 
         private static GameObject SetupMyGhost(Player player, GameObject prefab)
         {
-            //bool enabled = false;
-            //TerrainModifier componentInChildren = prefab.GetComponentInChildren<TerrainModifier>();
-            //if ((bool)componentInChildren)
-            //{
-            //    enabled = componentInChildren.enabled;
-            //    componentInChildren.enabled = false;
-            //}
+            //This takes some shortcuts because it's only ever used for Plant pieces
 
             ZNetView.m_forceDisableInit = true;
             var newGhost = UnityEngine.Object.Instantiate(prefab);
             ZNetView.m_forceDisableInit = false;
             newGhost.name = prefab.name;
-
-            //if ((bool)componentInChildren)
-            //{
-            //    componentInChildren.enabled = enabled;
-            //}
 
             foreach (Joint joint in newGhost.GetComponentsInChildren<Joint>())
             {
@@ -326,16 +315,6 @@ namespace MassFarming
             {
                 UnityEngine.Object.Destroy(rigidBody);
             }
-
-            //Collider[] colliders = newGhost.GetComponentsInChildren<Collider>();
-            //foreach (Collider collider in colliders)
-            //{
-            //    if (((1 << collider.gameObject.layer) & m_placeRayMask) == 0)
-            //    {
-            //        ZLog.Log("Disabling " + collider.gameObject.name + "  " + LayerMask.LayerToName(collider.gameObject.layer));
-            //        collider.enabled = false;
-            //    }
-            //}
 
             int layer = LayerMask.NameToLayer("ghost");
             foreach(var childTransform in newGhost.GetComponentsInChildren<Transform>())
@@ -353,35 +332,10 @@ namespace MassFarming
                 UnityEngine.Object.Destroy(guidepoint);
             }
 
-            Light[] componentsInChildren7 = newGhost.GetComponentsInChildren<Light>();
-            foreach (Light v in componentsInChildren7)
+            foreach (Light light in newGhost.GetComponentsInChildren<Light>())
             {
-                UnityEngine.Object.Destroy(v);
+                UnityEngine.Object.Destroy(light);
             }
-
-            //AudioSource[] componentsInChildren8 = newGhost.GetComponentsInChildren<AudioSource>();
-            //for (int i = 0; i < componentsInChildren8.Length; i++)
-            //{
-            //    componentsInChildren8[i].enabled = false;
-            //}
-
-            //ZSFX[] componentsInChildren9 = newGhost.GetComponentsInChildren<ZSFX>();
-            //foreach (ZSFX v1 in componentsInChildren9)
-            //{
-            //    v1.enabled = false;
-            //}
-
-            //Windmill componentInChildren2 = newGhost.GetComponentInChildren<Windmill>();
-            //if ((bool)componentInChildren2)
-            //{
-            //    componentInChildren2.enabled = false;
-            //}
-
-            //ParticleSystem[] componentsInChildren10 = newGhost.GetComponentsInChildren<ParticleSystem>();
-            //for (int i = 0; i < componentsInChildren10.Length; i++)
-            //{
-            //    componentsInChildren10[i].gameObject.SetActive(value: false);
-            //}
 
             Transform ghostOnlyTransform = newGhost.transform.Find("_GhostOnly");
             if ((bool)ghostOnlyTransform)
@@ -389,8 +343,6 @@ namespace MassFarming
                 ghostOnlyTransform.gameObject.SetActive(value: true);
             }
 
-            newGhost.transform.position = player.transform.position;
-            newGhost.transform.localScale = prefab.transform.localScale;
             foreach (MeshRenderer meshRenderer in newGhost.GetComponentsInChildren<MeshRenderer>())
             {
                 if (!(meshRenderer.sharedMaterial == null))
