@@ -167,7 +167,10 @@ namespace MassFarming
         private static Piece _fakeResourcePiece = new Piece()
         {
             m_dlc = string.Empty,
-            m_resources = new Piece.Requirement[1]
+            m_resources = new Piece.Requirement[]
+            {
+                new Piece.Requirement()
+            }
         };
 
         [HarmonyPostfix]
