@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -163,6 +164,11 @@ namespace MassFarming
         }
 
         private static GameObject[] _placementGhosts = new GameObject[1];
+        private static Piece _fakeResourcePiece = new Piece()
+        {
+            m_dlc = string.Empty,
+            m_resources = new Piece.Requirement[1]
+        };
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Player), "SetupPlacementGhost")]
@@ -202,6 +208,12 @@ namespace MassFarming
                 return;
             }
 
+            //Find the required resource to plant the item
+            //Assuming that for plants there is only a single resource requirement...
+            var requirement = ghost.GetComponent<Piece>().m_resources.FirstOrDefault(r => r.m_resItem && r.m_amount > 0);
+            _fakeResourcePiece.m_resources[0].m_resItem = requirement.m_resItem;
+            _fakeResourcePiece.m_resources[0].m_amount = requirement.m_amount;
+
             var currentStamina = __instance.GetStamina();
             var tool = __instance.GetRightItem();
             var heightmap = Heightmap.FindHeightmap(ghost.transform.position);
@@ -216,6 +228,9 @@ namespace MassFarming
                     continue;
                 }
 
+                //Track total cost of each placement
+                _fakeResourcePiece.m_resources[0].m_amount += requirement.m_amount;
+
                 _placementGhosts[i].transform.position = newPos;
                 _placementGhosts[i].transform.rotation = ghost.transform.rotation;
                 _placementGhosts[i].SetActive(true);
@@ -225,18 +240,21 @@ namespace MassFarming
                 {
                     invalid = true;
                 }
-                if (!HasGrowSpace(newPos, ghost.gameObject))
+                else if (!HasGrowSpace(newPos, ghost.gameObject))
                 {
                     invalid = true;
                 }
-                if (!MassFarming.IgnoreStamina.Value && currentStamina < tool.m_shared.m_attack.m_attackStamina)
+                else if (!MassFarming.IgnoreStamina.Value && currentStamina < tool.m_shared.m_attack.m_attackStamina)
                 {
                     Hud.instance.StaminaBarNoStaminaFlash();
                     invalid = true;
                 }
+                else if (!(bool)m_noPlacementCostField.GetValue(__instance) && !__instance.HaveRequirements(_fakeResourcePiece, Player.RequirementMode.CanBuild))
+                {
+                    invalid = true;
+                }
                 currentStamina -= tool.m_shared.m_attack.m_attackStamina;
 
-                
                 _placementGhosts[i].GetComponent<Piece>().SetInvalidPlacementHeightlight(invalid);                
             }
         }
