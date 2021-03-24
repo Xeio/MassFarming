@@ -116,7 +116,7 @@ namespace MassFarming
                 {
                     __instance.UseStamina(tool.m_shared.m_attack.m_attackStamina);
                 }
-                if (tool.m_shared.m_useDurability)
+                if (!MassFarming.IgnoreDurability.Value && tool.m_shared.m_useDurability)
                 {
                     tool.m_durability -= tool.m_shared.m_useDurabilityDrain;
                     if (tool.m_durability <= 0f)
