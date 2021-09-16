@@ -11,7 +11,7 @@ namespace MassFarming
         static MethodInfo _ExtractMethod = AccessTools.Method(typeof(Beehive), "Extract");
 
         [HarmonyPatch(typeof(Player), "Interact")]
-        public static void Prefix(Player __instance, GameObject go, bool hold)
+        public static void Prefix(Player __instance, GameObject go, bool hold, bool alt)
         {
             if (__instance.InAttack() || __instance.InDodge())
             {
@@ -44,7 +44,7 @@ namespace MassFarming
                         if (nearbyPickable.m_itemPrefab.name == targetedPickable.m_itemPrefab.name)
                         {
                             //Pick up all prefabs with the same name
-                            nearbyPickable.Interact(__instance, false);
+                            nearbyPickable.Interact(__instance, false, alt);
                         }
                     }
                 }
