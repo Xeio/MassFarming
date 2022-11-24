@@ -87,7 +87,7 @@ namespace MassFarming
 
                 if (!hasStamina)
                 {
-                    Hud.instance.StaminaBarNoStaminaFlash();
+                    Hud.instance.StaminaBarUppgradeFlash();
                     return;
                 }
 
@@ -249,7 +249,7 @@ namespace MassFarming
                 }
                 else if (!MassFarming.IgnoreStamina.Value && currentStamina < tool.m_shared.m_attack.m_attackStamina)
                 {
-                    Hud.instance.StaminaBarNoStaminaFlash();
+                    Hud.instance.StaminaBarUppgradeFlash();
                     invalid = true;
                 }
                 else if (!(bool)m_noPlacementCostField.GetValue(__instance) && !__instance.HaveRequirements(_fakeResourcePiece, Player.RequirementMode.CanBuild))
