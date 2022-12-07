@@ -111,7 +111,7 @@ namespace MassFarming
                 placedPiece.m_placeEffect.Create(newPos, placedRotation, newPlaceObj.transform);
                 Game.instance.GetPlayerProfile().m_playerStats.m_builds++;
 
-                __instance.ConsumeResources(placedPiece.m_resources, 0);
+                __instance.ConsumeResources(placedPiece.m_resources, 0, -1);
                 if (!MassFarming.IgnoreStamina.Value)
                 {
                     __instance.UseStamina(tool.m_shared.m_attack.m_attackStamina);
