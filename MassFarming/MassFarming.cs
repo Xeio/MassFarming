@@ -12,7 +12,8 @@ namespace MassFarming
         public static ConfigEntry<KeyboardShortcut> MassActionHotkey { get; private set; }
         public static ConfigEntry<KeyboardShortcut> ControllerPickupHotkey { get; private set; }
         public static ConfigEntry<float> MassInteractRange { get; private set; }
-        public static ConfigEntry<int> PlantGridSize { get; private set; }
+        public static ConfigEntry<int> PlantGridWidth { get; private set; }
+        public static ConfigEntry<int> PlantGridLength { get; private set; }
         public static ConfigEntry<bool> IgnoreStamina { get; private set; }
         public static ConfigEntry<bool> IgnoreDurability { get; private set; }
 
@@ -23,7 +24,8 @@ namespace MassFarming
 
             MassInteractRange = Config.Bind("Pickup", nameof(MassInteractRange), 5f, "Range of auto-pickup.");
 
-            PlantGridSize = Config.Bind("Plant", nameof(PlantGridSize), 5, "Grid size of auto-plant. Reccomend odd-number, default is '5' so (5x5).");
+            PlantGridWidth = Config.Bind("Plant", nameof(PlantGridWidth), 5, "Grid width of auto-plant. Recommend odd-number, default is '5' so (5x5).");
+            PlantGridLength = Config.Bind("Plant", nameof(PlantGridLength), 5, "Grid wength of auto-plant. Recommend odd-number, default is '5' so (5x5).");
             IgnoreStamina = Config.Bind("Plant", nameof(IgnoreStamina), false, "Ignore stamina requirements when planting extra rows.");
             IgnoreDurability = Config.Bind("Plant", nameof(IgnoreDurability), false, "Ignore durability when planting extra rows.");
 
