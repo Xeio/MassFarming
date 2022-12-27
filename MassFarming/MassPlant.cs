@@ -130,12 +130,19 @@ namespace MassFarming
         private static List<Vector3> BuildPlantingGridPositions(Vector3 originPos, Plant placedPlant, Quaternion rotation)
         {
             var plantRadius = placedPlant.m_growRadius * 2;
-            int halfGrid = MassFarming.PlantGridWidth.Value / 2;
 
             List<Vector3> gridPositions = new List<Vector3>(MassFarming.PlantGridWidth.Value * MassFarming.PlantGridLength.Value);
             Vector3 left = rotation * Vector3.left * plantRadius;
             Vector3 forward = rotation * Vector3.forward * plantRadius;
-            Vector3 gridOrigin = originPos - (left * halfGrid);
+            Vector3 gridOrigin = originPos;
+            if (MassFarming.GridAnchorLength.Value)
+            {
+                gridOrigin -= forward * (MassFarming.PlantGridLength.Value / 2);
+            }
+            if (MassFarming.GridAnchorWidth.Value)
+            {
+                gridOrigin -= left * (MassFarming.PlantGridWidth.Value / 2);
+            }
 
             Vector3 newPos;
             for (var x = 0; x < MassFarming.PlantGridLength.Value; x++)
