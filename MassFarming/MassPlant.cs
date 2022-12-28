@@ -130,18 +130,25 @@ namespace MassFarming
         private static List<Vector3> BuildPlantingGridPositions(Vector3 originPos, Plant placedPlant, Quaternion rotation)
         {
             var plantRadius = placedPlant.m_growRadius * 2;
-            int halfGrid = MassFarming.PlantGridSize.Value / 2;
 
-            List<Vector3> gridPositions = new List<Vector3>(MassFarming.PlantGridSize.Value * MassFarming.PlantGridSize.Value);
+            List<Vector3> gridPositions = new List<Vector3>(MassFarming.PlantGridWidth.Value * MassFarming.PlantGridLength.Value);
             Vector3 left = rotation * Vector3.left * plantRadius;
             Vector3 forward = rotation * Vector3.forward * plantRadius;
-            Vector3 gridOrigin = originPos - (forward * halfGrid) - (left * halfGrid);
+            Vector3 gridOrigin = originPos;
+            if (MassFarming.GridAnchorLength.Value)
+            {
+                gridOrigin -= forward * (MassFarming.PlantGridLength.Value / 2);
+            }
+            if (MassFarming.GridAnchorWidth.Value)
+            {
+                gridOrigin -= left * (MassFarming.PlantGridWidth.Value / 2);
+            }
 
             Vector3 newPos;
-            for (var x = 0; x < MassFarming.PlantGridSize.Value; x++)
+            for (var x = 0; x < MassFarming.PlantGridLength.Value; x++)
             {
                 newPos = gridOrigin;
-                for (var z = 0; z < MassFarming.PlantGridSize.Value; z++)
+                for (var z = 0; z < MassFarming.PlantGridWidth.Value; z++)
                 {
                     newPos.y = ZoneSystem.instance.GetGroundHeight(newPos);
                     gridPositions.Add(newPos);
@@ -264,7 +271,7 @@ namespace MassFarming
 
         private static bool EnsureGhostsBuilt(Player player)
         {
-            var requiredSize = MassFarming.PlantGridSize.Value * MassFarming.PlantGridSize.Value;
+            var requiredSize = MassFarming.PlantGridWidth.Value * MassFarming.PlantGridLength.Value;
             bool needsRebuild = !_placementGhosts[0] || _placementGhosts.Length != requiredSize;
             if (needsRebuild) 
             {
