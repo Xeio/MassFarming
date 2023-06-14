@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -13,6 +14,7 @@ namespace MassFarming
         private static FieldInfo m_noPlacementCostField = AccessTools.Field(typeof(Player), "m_noPlacementCost");
         private static FieldInfo m_placementGhostField = AccessTools.Field(typeof(Player), "m_placementGhost");
         private static FieldInfo m_buildPiecesField = AccessTools.Field(typeof(Player), "m_buildPieces");
+        private static MethodInfo _GetRightItemMethod = AccessTools.Method(typeof(Humanoid), "GetRightItem");
 
         private static Vector3 placedPosition;
         private static Quaternion placedRotation;
@@ -82,7 +84,13 @@ namespace MassFarming
                     continue;
                 }
 
-                var tool = __instance.GetRightItem();
+                var tool = _GetRightItemMethod.Invoke(__instance, Array.Empty<object>()) as ItemDrop.ItemData;
+                if(tool is null)
+                {
+                    //This shouldn't really ever happen...
+                    continue;
+                }
+
                 var hasStamina = MassFarming.IgnoreStamina.Value || __instance.HaveStamina(tool.m_shared.m_attack.m_attackStamina);
 
                 if (!hasStamina)
@@ -225,7 +233,12 @@ namespace MassFarming
             _fakeResourcePiece.m_resources[0].m_amount = requirement.m_amount;
 
             var currentStamina = __instance.GetStamina();
-            var tool = __instance.GetRightItem();
+            var tool = _GetRightItemMethod.Invoke(__instance, Array.Empty<object>()) as ItemDrop.ItemData;
+            if (tool is null)
+            {
+                //This shouldn't really ever happen...
+                return;
+            }
             var heightmap = Heightmap.FindHeightmap(ghost.transform.position);
             var positions = BuildPlantingGridPositions(ghost.transform.position, plant, ghost.transform.rotation);
             for (int i = 0; i < _placementGhosts.Length; i++)
