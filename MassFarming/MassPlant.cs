@@ -117,7 +117,8 @@ namespace MassFarming
                     component.SetCreator(__instance.GetPlayerID());
                 }
                 placedPiece.m_placeEffect.Create(newPos, placedRotation, newPlaceObj.transform);
-                Game.instance.GetPlayerProfile().m_playerStats.m_builds++;
+                //Game.instance.GetPlayerProfile().m_playerStats.m_builds++;
+                Game.instance.IncrementPlayerStat(PlayerStatType.Builds);
 
                 __instance.ConsumeResources(placedPiece.m_resources, 0, -1);
                 if (!MassFarming.IgnoreStamina.Value)
