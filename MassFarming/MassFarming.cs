@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 using HarmonyLib;
 using System.Reflection;
 using UnityEngine;
@@ -19,8 +20,11 @@ namespace MassFarming
         public static ConfigEntry<bool> GridAnchorWidth { get; private set; }
         public static ConfigEntry<bool> GridAnchorLength { get; private set; }
 
+        public static ManualLogSource logger;
+
         public void Awake()
         {
+            logger = Logger;
             MassActionHotkey = Config.Bind("Hotkeys", nameof(MassActionHotkey), new KeyboardShortcut(KeyCode.LeftShift), "Mass activation hotkey for multi-pickup/multi-plant.");
             ControllerPickupHotkey = Config.Bind("Hotkeys", nameof(ControllerPickupHotkey), new KeyboardShortcut(KeyCode.JoystickButton4), "Mass activation hotkey for multi-pickup/multi-plant for controller.");
 
