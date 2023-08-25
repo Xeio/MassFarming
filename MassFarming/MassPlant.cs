@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using BepInEx.Logging;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,11 +21,28 @@ namespace MassFarming
         private static Quaternion placedRotation;
         private static Piece placedPiece;
         private static bool placeSuccessful = false;
+        private static Nullable<int> massFarmingRotation = null;
+
+        private static ManualLogSource logger = MassFarming.logger;
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Player), "PlacePiece")]
+        public static void PlacePiecePrefix(int ___m_placeRotation)
+        {
+            // When MassFarming is used, save rotation before placing.
+            if (isHotKeyPressed())
+            {
+                logger.LogInfo("PlacePiecePrefix HOTKEY. ___m_placeRotation: " + ___m_placeRotation + ", massFarmingRotation: " + massFarmingRotation);
+                if (!massFarmingRotation.HasValue) massFarmingRotation = ___m_placeRotation;
+            }
+        }
+
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Player), "PlacePiece")]
-        public static void PlacePiecePostfix(Player __instance, ref bool __result, Piece piece)
+        public static void PlacePiecePostfix(Player __instance, ref bool __result, Piece piece, ref int ___m_placeRotation)
         {
+            logger.LogInfo("PlacePiecePostfix");
             placeSuccessful = __result;
             if (__result)
             {
@@ -33,20 +51,35 @@ namespace MassFarming
                 placedRotation = placeGhost.transform.rotation;
                 placedPiece = piece;
             }
+            // When MassFarming is used, revert any change to rotation during placing to last state saved before placing.
+            if (isHotKeyPressed())
+            {
+                ___m_placeRotation = massFarmingRotation.Value;
+            }            
         }
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Player), "UpdatePlacement")]
-        public static void UpdatePlacementPrefix(bool takeInput, float dt)
+        public static void UpdatePlacementPrefix(bool takeInput, float dt, ref  int ___m_placeRotation)
         {
             //Clear any previous place result
             placeSuccessful = false;
+            // When MassFarming is used, reset rotation to mod's last used rotation
+            if (isHotKeyPressed())
+            {
+                if (massFarmingRotation.HasValue) ___m_placeRotation = massFarmingRotation.Value;
+            }
         }
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Player), "UpdatePlacement")]
-        public static void UpdatePlacementPostfix(Player __instance, bool takeInput, float dt)
+        public static void UpdatePlacementPostfix(Player __instance, bool takeInput, float dt, int ___m_placeRotation)
         {
+            // When MassFarming is used, save user changes of rotation
+            if (isHotKeyPressed()) { 
+                massFarmingRotation = ___m_placeRotation;
+            }
+
             if (!placeSuccessful)
             {
                 //Ignore when the place didn't happen
@@ -59,7 +92,7 @@ namespace MassFarming
                 return;
             }
 
-            if (!Input.GetKey(MassFarming.ControllerPickupHotkey.Value.MainKey) && !Input.GetKey(MassFarming.MassActionHotkey.Value.MainKey))
+            if (!isHotKeyPressed())
             {
                 //Hotkey required
                 return;
@@ -110,7 +143,7 @@ namespace MassFarming
                     continue;
                 }
 
-                GameObject newPlaceObj = UnityEngine.Object.Instantiate(placedPiece.gameObject, newPos, placedRotation);
+                GameObject newPlaceObj = UnityEngine.Object.Instantiate(placedPiece.gameObject, newPos, placedRotation );
                 Piece component = newPlaceObj.GetComponent<Piece>();
                 if (component)
                 {
@@ -133,6 +166,11 @@ namespace MassFarming
                     }
                 }
             }
+        }
+
+        private static Boolean isHotKeyPressed()
+        {
+            return Input.GetKey(MassFarming.ControllerPickupHotkey.Value.MainKey) || Input.GetKey(MassFarming.MassActionHotkey.Value.MainKey);
         }
 
         private static List<Vector3> BuildPlantingGridPositions(Vector3 originPos, Plant placedPlant, Quaternion rotation)
@@ -188,10 +226,31 @@ namespace MassFarming
             }
         };
 
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Player), "SetupPlacementGhost")]
+        public static void SetupPlacementGhostPrefix(Player __instance, int ___m_placeRotation)
+        {
+            logger.LogInfo("SetupPlacementGhostPrefix");
+            if (isHotKeyPressed())
+            {
+
+                logger.LogInfo("SetupPlacementGhostPrefix HOTKEY. ___m_placeRotation: " + ___m_placeRotation + ", massFarmingRotation: " + massFarmingRotation);
+                if (!massFarmingRotation.HasValue) massFarmingRotation = ___m_placeRotation;
+            }
+        }
+
+
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Player), "SetupPlacementGhost")]
-        public static void SetupPlacementGhostPostfix(Player __instance)
+        public static void SetupPlacementGhostPostfix(Player __instance, ref int ___m_placeRotation)
         {
+            logger.LogInfo("SetupPlacementGhostPostfix");
+            if (isHotKeyPressed())
+            {
+
+                logger.LogInfo("SetupPlacementGhostPostfix HOTKEY. ___m_placeRotation: " + ___m_placeRotation + ", massFarmingRotation: " + massFarmingRotation);
+                ___m_placeRotation = massFarmingRotation.Value;
+            }
             DestroyGhosts();
         }
 
@@ -219,6 +278,7 @@ namespace MassFarming
                 SetGhostsActive(false);
                 return;
             }
+
 
             if (!EnsureGhostsBuilt(__instance))
             {
