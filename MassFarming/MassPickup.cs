@@ -24,7 +24,17 @@ namespace MassFarming
                 return;
             }
 
-            if (!Input.GetKey(MassFarming.ControllerPickupHotkey.Value.MainKey) && !Input.GetKey(MassFarming.MassActionHotkey.Value.MainKey))
+            var controllerKey = MassFarming.ControllerPickupHotkey.Value.MainKey;
+			var controllerKeyEmpty = controllerKey == KeyCode.None;
+            var controllerPressed = Input.GetKey(controllerKey);
+            var controllerOk = controllerKeyEmpty || controllerPressed;
+
+            var keyboardKey = MassFarming.MassActionHotkey.Value.MainKey;
+            var keyboardKeyEmpty = keyboardKey == KeyCode.None;
+            var keyboardPressed = Input.GetKey(keyboardKey);
+            var keyboardOk = keyboardKeyEmpty || keyboardPressed;
+
+			if (!controllerOk && !keyboardOk)
             {
                 //Hotkey required
                 return;
