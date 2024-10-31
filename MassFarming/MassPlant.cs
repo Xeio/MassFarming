@@ -23,8 +23,8 @@ namespace MassFarming
         private static int? massFarmingRotation = null;
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(Player), "PlacePiece")]
-        public static void PlacePiecePrefix(int ___m_placeRotation)
+        [HarmonyPatch(typeof(Player), "TryPlacePiece")]
+        public static void TryPlacePiecePrefix(int ___m_placeRotation)
         {
             // When MassFarming is used, save rotation before placing.
             if (IsHotKeyPressed && massFarmingRotation is null)
@@ -34,8 +34,8 @@ namespace MassFarming
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(Player), "PlacePiece")]
-        public static void PlacePiecePostfix(Player __instance, ref bool __result, Piece piece, ref int ___m_placeRotation)
+        [HarmonyPatch(typeof(Player), "TryPlacePiece")]
+        public static void TryPlacePiecePostfix(Player __instance, ref bool __result, Piece piece, ref int ___m_placeRotation)
         {
             placeSuccessful = __result;
             if (__result)
