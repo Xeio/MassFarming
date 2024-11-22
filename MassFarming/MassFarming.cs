@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace MassFarming
 {
-    [BepInPlugin("xeio.MassFarming", "MassFarming", "1.10")]
+    [BepInPlugin("xeio.MassFarming", "MassFarming", "1.11")]
     public class MassFarming : BaseUnityPlugin
     {
         public static ConfigEntry<KeyboardShortcut> MassActionHotkey { get; private set; }
