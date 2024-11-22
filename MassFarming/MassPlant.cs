@@ -209,14 +209,7 @@ namespace MassFarming
         }
 
         private static GameObject[] _placementGhosts = new GameObject[1];
-        private static readonly Piece _fakeResourcePiece = new Piece()
-        {
-            m_dlc = string.Empty,
-            m_resources = new Piece.Requirement[]
-            {
-                new Piece.Requirement()
-            }
-        };
+        private static Piece _fakeResourcePiece;
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Player), "SetupPlacementGhost")]
@@ -359,6 +352,16 @@ namespace MassFarming
                 }
             }
 
+            if (!_fakeResourcePiece)
+            {
+                _fakeResourcePiece = _placementGhosts[0].GetComponent<Piece>();
+                _fakeResourcePiece.m_dlc = string.Empty;
+                _fakeResourcePiece.m_resources = new Piece.Requirement[]
+                {
+                    new Piece.Requirement()
+                };
+            }
+
             return true;
         }
 
@@ -372,6 +375,7 @@ namespace MassFarming
                     _placementGhosts[i] = null;
                 }
             }
+            _fakeResourcePiece = null;
         }
 
         private static void SetGhostsActive(bool active)
