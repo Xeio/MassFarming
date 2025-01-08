@@ -99,6 +99,8 @@ namespace MassFarming
                 return;
             }
 
+            var pieceTable = m_buildPiecesField.GetValue(__instance) as PieceTable;
+
             foreach (var newPos in BuildPlantingGridPositions(placedPosition, plant, placedRotation))
             {
                 if (placedPiece.m_cultivatedGroundOnly && !heightmap.IsCultivated(newPos))
@@ -145,12 +147,16 @@ namespace MassFarming
                     component.SetCreator(__instance.GetPlayerID());
                 }
                 placedPiece.m_placeEffect.Create(newPos, placedRotation, newPlaceObj.transform);
-                Game.instance.IncrementPlayerStat(PlayerStatType.Builds);
 
+                Game.instance.IncrementPlayerStat(PlayerStatType.Builds);
                 __instance.ConsumeResources(placedPiece.m_resources, 0, -1);
                 if (!MassFarming.IgnoreStamina.Value)
                 {
                     __instance.UseStamina(tool.m_shared.m_attack.m_attackStamina);
+                }
+                if (pieceTable != null)
+                {
+                    __instance.RaiseSkill(pieceTable.m_skill);
                 }
                 if (!MassFarming.IgnoreDurability.Value && tool.m_shared.m_useDurability)
                 {
