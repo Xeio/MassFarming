@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Splatform;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -144,7 +145,7 @@ namespace MassFarming
                 Piece component = newPlaceObj.GetComponent<Piece>();
                 if (component)
                 {
-                    component.SetCreator(__instance.GetPlayerID());
+                    component.SetCreator(__instance.GetPlayerID(), PlatformManager.DistributionPlatform.LocalUser.PlatformUserID);
                 }
                 placedPiece.m_placeEffect.Create(newPos, placedRotation, newPlaceObj.transform);
 

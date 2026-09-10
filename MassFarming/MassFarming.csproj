@@ -60,6 +60,9 @@
     <Reference Include="MonoMod.Utils">
       <HintPath>BepInEx\MonoMod.Utils.dll</HintPath>
     </Reference>
+    <Reference Include="Splatform">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Valheim\valheim_Data\Managed\Splatform.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
