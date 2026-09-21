@@ -25,10 +25,10 @@ namespace MassFarming
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Player), "TryPlacePiece")]
-        public static void TryPlacePiecePrefix(int ___m_placeRotation)
+        public static void TryPlacePiecePrefix(Player __instance, int ___m_placeRotation)
         {
             // When MassFarming is used, save rotation before placing.
-            if (IsHotKeyPressed && massFarmingRotation is null)
+            if (ShouldTrackRotation(__instance) && massFarmingRotation is null)
             {
                 massFarmingRotation = ___m_placeRotation;
             }
@@ -47,7 +47,7 @@ namespace MassFarming
                 placedPiece = piece;
             }
             // When MassFarming is used, revert any change to rotation during placing to last state saved before placing.
-            if (IsHotKeyPressed)
+            if (ShouldTrackRotation(__instance) && massFarmingRotation.HasValue)
             {
                 ___m_placeRotation = massFarmingRotation.Value;
             }            
@@ -55,12 +55,12 @@ namespace MassFarming
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Player), "UpdatePlacement")]
-        public static void UpdatePlacementPrefix(bool takeInput, float dt, ref int ___m_placeRotation)
+        public static void UpdatePlacementPrefix(Player __instance, bool takeInput, float dt, ref int ___m_placeRotation)
         {
             //Clear any previous place result
             placeSuccessful = false;
             // When MassFarming is used, reset rotation to mod's last used rotation
-            if (IsHotKeyPressed && massFarmingRotation.HasValue)
+            if (ShouldTrackRotation(__instance) && massFarmingRotation.HasValue)
             {
                 ___m_placeRotation = massFarmingRotation.Value;
             }
@@ -71,7 +71,7 @@ namespace MassFarming
         public static void UpdatePlacementPostfix(Player __instance, bool takeInput, float dt, int ___m_placeRotation)
         {
             // When MassFarming is used, save user changes of rotation
-            if (IsHotKeyPressed) 
+            if (ShouldTrackRotation(__instance)) 
             { 
                 massFarmingRotation = ___m_placeRotation;
             }
@@ -172,6 +172,17 @@ namespace MassFarming
 
         private static bool IsHotKeyPressed => Input.GetKey(MassFarming.ControllerPickupHotkey.Value.MainKey) || Input.GetKey(MassFarming.MassActionHotkey.Value.MainKey);
 
+        private static bool IsPlacingPlant(Player player)
+        {
+            var ghost = (GameObject)m_placementGhostField.GetValue(player);
+            return ghost && ghost.GetComponent<Plant>();
+        }
+
+        //The saved rotation only exists to keep planting grids aligned, so it must not be
+        //recorded or restored while a non-plant piece is selected. Otherwise holding the
+        //hotkey snaps any build piece back to the last rotation this mod happened to save.
+        private static bool ShouldTrackRotation(Player player) => IsHotKeyPressed && IsPlacingPlant(player);
+
         private static List<Vector3> BuildPlantingGridPositions(Vector3 originPos, Plant placedPlant, Quaternion rotation)
         {
             var plantRadius = placedPlant.m_growRadius * 2;
@@ -222,7 +233,7 @@ namespace MassFarming
         [HarmonyPatch(typeof(Player), "SetupPlacementGhost")]
         public static void SetupPlacementGhostPrefix(Player __instance, int ___m_placeRotation)
         {
-            if (IsHotKeyPressed && massFarmingRotation is null)
+            if (ShouldTrackRotation(__instance) && massFarmingRotation is null)
             {
                 massFarmingRotation = ___m_placeRotation;
             }
@@ -232,7 +243,7 @@ namespace MassFarming
         [HarmonyPatch(typeof(Player), "SetupPlacementGhost")]
         public static void SetupPlacementGhostPostfix(Player __instance, ref int ___m_placeRotation)
         {
-            if (IsHotKeyPressed && massFarmingRotation.HasValue)
+            if (ShouldTrackRotation(__instance) && massFarmingRotation.HasValue)
             {
                 ___m_placeRotation = massFarmingRotation.Value;
             }
