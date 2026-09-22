@@ -35,7 +35,7 @@ namespace MassFarming
             {
                 var interactMask = (int)m_interactMaskField.GetValue(__instance);
                 var colliders = Physics.OverlapSphere(go.transform.position, MassFarming.MassInteractRange.Value, interactMask);
-                
+
                 foreach (var collider in colliders)
                 {
                     if (collider?.gameObject?.GetComponentInParent<Pickable>() is Pickable nearbyPickable &&
@@ -49,7 +49,7 @@ namespace MassFarming
                     }
                 }
             }
-            else if(interactible is Beehive beehive)
+            else if (interactible is Beehive beehive)
             {
                 var interactMask = (int)m_interactMaskField.GetValue(__instance);
                 var colliders = Physics.OverlapSphere(go.transform.position, MassFarming.MassInteractRange.Value, interactMask);

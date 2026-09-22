@@ -50,7 +50,7 @@ namespace MassFarming
             if (ShouldTrackRotation(__instance) && massFarmingRotation.HasValue)
             {
                 ___m_placeRotation = massFarmingRotation.Value;
-            }            
+            }
         }
 
         [HarmonyPrefix]
@@ -71,8 +71,8 @@ namespace MassFarming
         public static void UpdatePlacementPostfix(Player __instance, bool takeInput, float dt, int ___m_placeRotation)
         {
             // When MassFarming is used, save user changes of rotation
-            if (ShouldTrackRotation(__instance)) 
-            { 
+            if (ShouldTrackRotation(__instance))
+            {
                 massFarmingRotation = ___m_placeRotation;
             }
 
@@ -116,7 +116,7 @@ namespace MassFarming
                 }
 
                 var tool = _GetRightItemMethod.Invoke(__instance, Array.Empty<object>()) as ItemDrop.ItemData;
-                if(tool is null)
+                if (tool is null)
                 {
                     //This shouldn't really ever happen...
                     continue;
@@ -141,7 +141,7 @@ namespace MassFarming
                     continue;
                 }
 
-                GameObject newPlaceObj = UnityEngine.Object.Instantiate(placedPiece.gameObject, newPos, placedRotation );
+                GameObject newPlaceObj = UnityEngine.Object.Instantiate(placedPiece.gameObject, newPos, placedRotation);
                 Piece component = newPlaceObj.GetComponent<Piece>();
                 if (component)
                 {
@@ -255,7 +255,7 @@ namespace MassFarming
         public static void UpdatePlacementGhostPostfix(Player __instance, bool flashGuardStone)
         {
             var ghost = (GameObject)m_placementGhostField.GetValue(__instance);
-            if(!ghost || !ghost.activeSelf)
+            if (!ghost || !ghost.activeSelf)
             {
                 SetGhostsActive(false);
                 return;
@@ -333,7 +333,7 @@ namespace MassFarming
                 }
                 currentStamina -= tool.m_shared.m_attack.m_attackStamina;
 
-                _placementGhosts[i].GetComponent<Piece>().SetInvalidPlacementHeightlight(invalid);                
+                _placementGhosts[i].GetComponent<Piece>().SetInvalidPlacementHeightlight(invalid);
             }
         }
 
@@ -341,11 +341,11 @@ namespace MassFarming
         {
             var requiredSize = MassFarming.PlantGridWidth.Value * MassFarming.PlantGridLength.Value;
             bool needsRebuild = !_placementGhosts[0] || _placementGhosts.Length != requiredSize;
-            if (needsRebuild) 
+            if (needsRebuild)
             {
                 DestroyGhosts();
 
-                if(_placementGhosts.Length != requiredSize)
+                if (_placementGhosts.Length != requiredSize)
                 {
                     _placementGhosts = new GameObject[requiredSize];
                 }
@@ -398,7 +398,7 @@ namespace MassFarming
 
         private static void SetGhostsActive(bool active)
         {
-            foreach(var ghost in _placementGhosts) 
+            foreach (var ghost in _placementGhosts)
             {
                 ghost?.SetActive(active);
             }
@@ -424,13 +424,13 @@ namespace MassFarming
             }
 
             int layer = LayerMask.NameToLayer("ghost");
-            foreach(var childTransform in newGhost.GetComponentsInChildren<Transform>())
+            foreach (var childTransform in newGhost.GetComponentsInChildren<Transform>())
             {
                 childTransform.gameObject.layer = layer;
             }
 
-            foreach(var terrainModifier in newGhost.GetComponentsInChildren<TerrainModifier>())
-            { 
+            foreach (var terrainModifier in newGhost.GetComponentsInChildren<TerrainModifier>())
+            {
                 UnityEngine.Object.Destroy(terrainModifier);
             }
 
